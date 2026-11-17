@@ -1,0 +1,191 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "HAI NPC frontmatter",
+  "description": "Machine-readable header of every file in npcs/. Draft NPCs may be mostly empty; active NPCs must be complete enough to speak, look and behave on their own.",
+  "type": "object",
+  "required": ["id", "name", "status", "canon_version"],
+  "additionalProperties": false,
+  "patternProperties": {
+    "^x_": {}
+  },
+  "$defs": {
+    "npcId": {
+      "type": "string",
+      "pattern": "^npc-[0-9]{3}-[a-z0-9]+(-[a-z0-9]+)*$"
+    },
+    "stringList": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "sectionRole": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "role": { "type": "string" },
+        "frequency": { "type": "string" },
+        "venue": { "type": "string" }
+      }
+    },
+    "unit": {
+      "type": ["number", "null"],
+      "minimum": 0,
+      "maximum": 1
+    }
+  },
+  "properties": {
+    "id": { "$ref": "#/$defs/npcId" },
+    "name": { "type": "string", "minLength": 1 },
+    "aliases": { "$ref": "#/$defs/stringList" },
+    "status": { "enum": ["draft", "active", "retired"] },
+    "canon_version": { "type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$" },
+    "franchise": { "$ref": "#/$defs/stringList" },
+    "species": { "type": "string" },
+    "real_person": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "modeled_on_real_person": { "type": "boolean" },
+        "permission_status": { "enum": ["not_applicable", "pending", "granted"] },
+        "notes": { "type": "string" }
+      }
+    },
+    "sections": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "typed_out_loud": { "$ref": "#/$defs/sectionRole" },
+        "beats_bars_breakdowns": { "$ref": "#/$defs/sectionRole" },
+        "hai_radio": { "$ref": "#/$defs/sectionRole" },
+        "silent_but_deadly": { "$ref": "#/$defs/sectionRole" }
+      }
+    },
+    "voice": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "elevenlabs_voice_id": { "type": "string" },
+        "elevenlabs_model": { "type": "string" },
+        "settings": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "stability": { "$ref": "#/$defs/unit" },
+            "similarity": { "$ref": "#/$defs/unit" },
+            "style": { "$ref": "#/$defs/unit" },
+            "speed": { "type": ["number", "null"] }
+          }
+        },
+        "delivery": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "pace": { "type": "string" },
+            "pitch": { "type": "string" },
+            "accent": { "type": "string" },
+            "energy": { "type": "string" }
+          }
+        },
+        "verbal_habits": { "$ref": "#/$defs/stringList" },
+        "catchphrases": { "$ref": "#/$defs/stringList" },
+        "audio_tags_allowed": { "$ref": "#/$defs/stringList" },
+        "sample_line": { "type": "string" }
+      }
+    },
+    "look": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "silhouette": { "type": "string" },
+        "palette": {
+          "type": "array",
+          "items": { "type": "string", "pattern": "^#[0-9A-Fa-f]{6}$" }
+        },
+        "wardrobe_default": { "type": "string" },
+        "signature_props": { "$ref": "#/$defs/stringList" },
+        "never": { "$ref": "#/$defs/stringList" },
+        "reference_images": { "$ref": "#/$defs/stringList" }
+      }
+    },
+    "animation": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "hedra_avatar": { "type": "string" },
+        "character_animator_puppet": { "type": "string" }
+      }
+    },
+    "relationships": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["with"],
+        "additionalProperties": false,
+        "properties": {
+          "with": { "$ref": "#/$defs/npcId" },
+          "dynamic": { "type": "string" }
+        }
+      }
+    },
+    "content_rules": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "do": { "$ref": "#/$defs/stringList" },
+        "dont": { "$ref": "#/$defs/stringList" },
+        "rating": { "type": "string" }
+      }
+    },
+    "live": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "autonomy": { "enum": ["shadow", "approve", "auto"] },
+        "triggers": { "$ref": "#/$defs/stringList" },
+        "avoid_topics": { "$ref": "#/$defs/stringList" },
+        "reply_style": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "max_words": { "type": "integer", "minimum": 1 },
+            "emoji": { "type": "boolean" },
+            "signature_opener": { "type": "string" }
+          }
+        },
+        "platforms": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "youtube": { "type": "boolean" },
+            "twitch": { "type": "boolean" },
+            "instagram": { "type": "boolean" },
+            "tiktok": { "type": "boolean" }
+          }
+        },
+        "max_replies_per_hour": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "fragments": { "$ref": "#/$defs/stringList" }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": { "status": { "const": "active" } },
+        "required": ["status"]
+      },
+      "then": {
+        "required": ["species", "sections", "voice", "look"],
+        "properties": {
+          "species": { "minLength": 1 },
+          "voice": {
+            "required": ["elevenlabs_voice_id"],
+            "properties": { "elevenlabs_voice_id": { "minLength": 1 } }
+          },
+          "look": {
+            "required": ["reference_images"],
+            "properties": { "reference_images": { "minItems": 1 } }
+          }
+        }
+      }
+    }
+  ]
+}
